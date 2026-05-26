@@ -1,0 +1,22 @@
+# ─── FastAPI Core ────────────────────────────────────────────────────────────
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9
+
+# ─── rPPG-Toolbox Dependencies ───────────────────────────────────────────────
+# Computer Vision (face detection + video reading)
+opencv-python>=4.8.0
+
+# Numerical / Signal Processing (used by POS_WANG and post_process)
+numpy>=1.24.0,<2.0.0
+scipy>=1.11.0
+
+# Image utils (required by unsupervised_methods/utils.py)
+scikit-image>=0.21.0
+scikit-learn>=1.3.0
+
+# rPPG-Toolbox also uses torch for its supervised methods,
+# but POS (unsupervised) only needs numpy/scipy — no GPU required.
+# If you want full toolbox support later:
+# torch>=2.0.0
+# torchvision>=0.15.0

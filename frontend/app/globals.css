@@ -1,0 +1,413 @@
+@import "tailwindcss";
+
+/* ─── Design Tokens ────────────────────────────────────────────────────────── */
+:root {
+  /* Base palette — clean warm white */
+  --bg-base:       #f4f7f9;
+  --bg-surface:    #ffffff;
+  --bg-raised:     #eef2f6;
+  --bg-overlay:    rgba(255, 255, 255, 0.85);
+
+  /* Borders */
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-muted:  rgba(0, 0, 0, 0.10);
+  --border-strong: rgba(0, 0, 0, 0.18);
+
+  /* Accent — teal (medical, trustworthy) */
+  --accent:        #0d9488;
+  --accent-dim:    rgba(13, 148, 136, 0.12);
+  --accent-glow:   rgba(13, 148, 136, 0.20);
+
+  /* Text */
+  --text-primary:  #0f1f2e;
+  --text-secondary:#3d5568;
+  --text-muted:    #7a92a7;
+
+  /* Status */
+  --success:       #059669;
+  --warning:       #d97706;
+  --danger:        #dc2626;
+
+  /* Fonts */
+  --font-sans: "Outfit", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+@theme inline {
+  --color-background: var(--bg-base);
+  --color-foreground: var(--text-primary);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+/* ─── Reset & Base ─────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+/* ─── Scrollbar ────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: var(--border-muted); border-radius: 2px; }
+
+/* ─── Utility Classes ──────────────────────────────────────────────────────── */
+.font-mono { font-family: var(--font-mono); }
+
+/* Glass surface */
+.glass {
+  background: var(--bg-overlay);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* Accent ring */
+.ring-accent {
+  box-shadow: 0 0 0 1.5px var(--accent);
+}
+
+/* ─── Keyframe Animations ──────────────────────────────────────────────────── */
+
+/* Scanner sweep line */
+@keyframes scanner-sweep {
+  0%   { transform: translateY(-100%); opacity: 0.8; }
+  45%  { opacity: 1; }
+  100% { transform: translateY(200%); opacity: 0; }
+}
+
+/* Gentle pulse glow for the camera frame */
+@keyframes frame-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); }
+  50%       { box-shadow: 0 0 0 8px transparent; }
+}
+
+/* Status dot heartbeat */
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.4); opacity: 0.7; }
+}
+
+/* Shimmer for loading skeleton */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+/* Fade + slide up for result cards */
+@keyframes slide-up {
+  from { transform: translateY(16px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* Corner bracket draw */
+@keyframes bracket-draw {
+  from { stroke-dashoffset: 80; }
+  to   { stroke-dashoffset: 0; }
+}
+
+/* Countdown ring */
+@keyframes ring-drain {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: 283; } /* 2π × 45 ≈ 283 */
+}
+
+/* Spinner for processing state */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Component Styles ─────────────────────────────────────────────────────── */
+
+/* Camera viewport wrapper */
+.camera-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  background: #dde5ed;
+  border: 1px solid var(--border-muted);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255,255,255,0.9);
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.camera-frame.recording {
+  border-color: var(--accent);
+  animation: frame-pulse 2s ease-in-out infinite;
+}
+
+/* Live video element */
+.camera-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* Mirror for natural webcam feel */
+}
+
+/* SVG corner brackets overlay */
+.corner-bracket {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Scanner sweep line (only during recording) */
+.scanner-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  animation: scanner-sweep 2.4s ease-in-out infinite;
+  pointer-events: none;
+  transform: translateY(-100%);
+}
+
+/* Face guide oval */
+.face-guide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.face-guide-oval {
+  width: 54%;
+  aspect-ratio: 3 / 4;
+  border: 1.5px dashed rgba(13, 148, 136, 0.45);
+  border-radius: 50%;
+  transition: border-color 0.4s ease;
+}
+
+.recording .face-guide-oval {
+  border-color: rgba(13, 148, 136, 0.8);
+  border-style: solid;
+}
+
+/* Status overlay badge */
+.status-badge {
+  position: absolute;
+  top: 0.875rem;
+  left: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border-subtle);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.status-dot.live {
+  animation: heartbeat 1.2s ease-in-out infinite;
+}
+
+/* Processing overlay */
+.processing-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(244, 247, 249, 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.processing-spinner {
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--border-muted);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+/* Metric result cards */
+.metric-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  padding: 1.25rem 1.5rem;
+  animation: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255,255,255,1);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.metric-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.metric-value {
+  font-family: var(--font-mono);
+  font-size: 2.5rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.metric-unit {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-left: 0.25rem;
+}
+
+.metric-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+}
+
+/* Confidence bar */
+.confidence-bar-track {
+  height: 3px;
+  border-radius: 9999px;
+  background: var(--border-subtle);
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.confidence-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: var(--accent);
+  transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* CTA button */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.75rem;
+  border-radius: 0.75rem;
+  background: var(--accent);
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.25);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #0f9e91;
+  box-shadow: 0 4px 20px var(--accent-glow);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.97) translateY(1px);
+  box-shadow: none;
+}
+
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Countdown ring */
+.countdown-ring {
+  position: absolute;
+  bottom: 0.875rem;
+  right: 0.875rem;
+  pointer-events: none;
+}
+
+/* Skeleton shimmer */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-raised) 0px,
+    var(--bg-overlay) 200px,
+    var(--bg-raised) 400px
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: 0.5rem;
+}
+
+/* Error state */
+.error-banner {
+  background: rgba(220, 38, 38, 0.06);
+  border: 1px solid rgba(220, 38, 38, 0.20);
+  border-radius: 0.75rem;
+  padding: 0.875rem 1rem;
+  color: var(--danger);
+  font-size: 0.875rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+/* Permission prompt card */
+.permission-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-muted);
+  border-radius: 1.25rem;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  aspect-ratio: 1 / 1;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* Noise grain — fixed pseudo, pointer-events none */
+.grain::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
